@@ -161,12 +161,12 @@ public class CassandraCQLClient extends DB {
           // begin SSL integration
           // If ssl_keystore_file_path, build the path using JAVA_HOME directory.
           if (sslKeystoreFilePath == null || sslKeystoreFilePath.isEmpty()) {
-              String javaHomeDirectory = System.getenv("JAVA_HOME");
-              if (javaHomeDirectory == null || javaHomeDirectory.isEmpty()) {
-                  throw new Exception("JAVA_HOME not set");
-              }
-              sslKeystoreFilePath = new StringBuilder(javaHomeDirectory).append("/jre/lib/security/cacerts")
-                .toString();
+            String javaHomeDirectory = System.getenv("JAVA_HOME");
+            if (javaHomeDirectory == null || javaHomeDirectory.isEmpty()) {
+              throw new Exception("JAVA_HOME not set");
+            }
+            sslKeystoreFilePath = new StringBuilder(javaHomeDirectory).append("/jre/lib/security/cacerts")
+                  .toString();
           }
 
           sslKeyStorePassword = (sslKeystorePassword != null && !sslKeystorePassword.isEmpty()) ?
@@ -175,13 +175,13 @@ public class CassandraCQLClient extends DB {
           sslKeyStoreFile = new File(sslKeystoreFilePath);
 
           if (!sslKeyStoreFile.exists() || !sslKeyStoreFile.canRead()) {
-              throw new Exception(String.format("Unable to access the SSL Key Store file from %s",
-                 sslKeystoreFilePath));
+            throw new Exception(String.format("Unable to access the SSL Key Store file from %s",
+              sslKeystoreFilePath));
           }
 
           final KeyStore keyStore = KeyStore.getInstance("JKS");
           try (final InputStream is = new FileInputStream(sslKeyStoreFile)) {
-                keyStore.load(is, sslKeyStorePassword.toCharArray());
+            keyStore.load(is, sslKeyStorePassword.toCharArray());
           }
 
           kmf = KeyManagerFactory.getInstance(KeyManagerFactory
