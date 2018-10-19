@@ -213,6 +213,9 @@ public class CassandraCQLClient extends DB {
           clusterBuilder = clusterBuilder.withSSL(sslOptions);
         }
         cluster = clusterBuilder.build();
+        if (cluster == null) {
+          System.out.println("cluster is null!!");
+        }
 /*
         if ((username != null) && !username.isEmpty()) {
           cluster = Cluster.builder().withCredentials(username, password)
