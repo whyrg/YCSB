@@ -145,8 +145,8 @@ public class CassandraCQLClient extends DB {
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
 
-        String ssl_keystore_file_path = config.getProperty(SSL_KEYSTORE_PROPERTY);
-        String ssl_keystore_password = config.getProperty(SSL_PASSWORD_PROPERTY);
+        String sslKeystoreFilePath = config.getProperty(SSL_KEYSTORE_PROPERTY);
+        String sslKeystorePassword = config.getProperty(SSL_PASSWORD_PROPERTY);
 
         String keyspace = getProperties().getProperty(KEYSPACE_PROPERTY,
             KEYSPACE_PROPERTY_DEFAULT);
@@ -157,24 +157,26 @@ public class CassandraCQLClient extends DB {
         writeConsistencyLevel = ConsistencyLevel.valueOf(
             getProperties().getProperty(WRITE_CONSISTENCY_LEVEL_PROPERTY,
                 WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
-        if (ssl.toLowerCase().equals("true")){
+        if (ssl.toLowerCase().equals("true")) {
           // begin SSL integration
           // If ssl_keystore_file_path, build the path using JAVA_HOME directory.
-          if (ssl_keystore_file_path == null || ssl_keystore_file_path.isEmpty()) {
+          if (sslKeystoreFilePath == null || sslKeystoreFilePath.isEmpty()) {
               String javaHomeDirectory = System.getenv("JAVA_HOME");
               if (javaHomeDirectory == null || javaHomeDirectory.isEmpty()) {
                   throw new Exception("JAVA_HOME not set");
               }
-              ssl_keystore_file_path = new StringBuilder(javaHomeDirectory).append("/jre/lib/security/cacerts").toString();
+              sslKeystoreFilePath = new StringBuilder(javaHomeDirectory).append("/jre/lib/security/cacerts")
+                .toString();
           }
 
-          sslKeyStorePassword = (ssl_keystore_password != null && !ssl_keystore_password.isEmpty()) ?
+          sslKeyStorePassword = (sslKeystorePassword != null && !sslKeystorePassword.isEmpty()) ?
                   ssl_keystore_password : sslKeyStorePassword;
 
-          sslKeyStoreFile = new File(ssl_keystore_file_path);
+          sslKeyStoreFile = new File(sslKeystoreFilePath);
 
           if (!sslKeyStoreFile.exists() || !sslKeyStoreFile.canRead()) {
-              throw new Exception(String.format("Unable to access the SSL Key Store file from %s", ssl_keystore_file_path));
+              throw new Exception(String.format("Unable to access the SSL Key Store file from %s",
+                 sslKeystoreFilePath));
           }
 
 
