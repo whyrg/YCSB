@@ -67,7 +67,10 @@ public class CassandraCQLClient extends DB {
   public static final String KEYSPACE_PROPERTY_DEFAULT = "ycsb";
   public static final String USERNAME_PROPERTY = "cassandra.username";
   public static final String PASSWORD_PROPERTY = "cassandra.password";
+
   public static final String SSL_PROPERTY = "cassandra.ssl";
+  public static final String SSL_KEYSTORE_PROPERTY = "cassandra.ssl.keystore";
+  public static final String SSL_PASSWORD_PROPERTY = "cassandra.ssl.keystore.password";
 
   public static final String HOSTS_PROPERTY = "hosts";
   public static final String PORT_PROPERTY = "port";
@@ -115,6 +118,7 @@ public class CassandraCQLClient extends DB {
     KeyManagerFactory kmf = null;
     TrustManagerFactory tmf = null;
     JdkSSLOptions sslOptions = null;
+    String sslKeyStorePassword = null;
     // Synchronized so that we only have a single
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
@@ -141,6 +145,9 @@ public class CassandraCQLClient extends DB {
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
 
+        String ssl_keystore_file_path = config.getProperty(SSL_KEYSTORE_PROPERTY);
+        String ssl_keystore_password = config.getProperty(SSL_PASSWORD_PROPERTY);
+
         String keyspace = getProperties().getProperty(KEYSPACE_PROPERTY,
             KEYSPACE_PROPERTY_DEFAULT);
 
@@ -152,7 +159,30 @@ public class CassandraCQLClient extends DB {
                 WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
         if (ssl.toLowerCase().equals("true")){
           // begin SSL integration
+          // If ssl_keystore_file_path, build the path using JAVA_HOME directory.
+          if (ssl_keystore_file_path == null || ssl_keystore_file_path.isEmpty()) {
+              String javaHomeDirectory = System.getenv("JAVA_HOME");
+              if (javaHomeDirectory == null || javaHomeDirectory.isEmpty()) {
+                  throw new Exception("JAVA_HOME not set");
+              }
+              ssl_keystore_file_path = new StringBuilder(javaHomeDirectory).append("/jre/lib/security/cacerts").toString();
+          }
+
+          sslKeyStorePassword = (ssl_keystore_password != null && !ssl_keystore_password.isEmpty()) ?
+                  ssl_keystore_password : sslKeyStorePassword;
+
+          sslKeyStoreFile = new File(ssl_keystore_file_path);
+
+          if (!sslKeyStoreFile.exists() || !sslKeyStoreFile.canRead()) {
+              throw new Exception(String.format("Unable to access the SSL Key Store file from %s", ssl_keystore_file_path));
+          }
+
+
           final KeyStore keyStore = KeyStore.getInstance("JKS");
+          try (final InputStream is = new FileInputStream(sslKeyStoreFile)) {
+                keyStore.load(is, sslKeyStorePassword.toCharArray());
+          }
+
           kmf = KeyManagerFactory.getInstance(KeyManagerFactory
                               .getDefaultAlgorithm());
           kmf.init(keyStore, sslKeyStorePassword.toCharArray());
