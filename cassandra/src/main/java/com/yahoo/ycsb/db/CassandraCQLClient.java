@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
 import java.security.*;
 
 /**
@@ -114,7 +114,7 @@ public class CassandraCQLClient extends DB {
     INIT_COUNT.incrementAndGet();
     KeyManagerFactory kmf = null;
     TrustManagerFactory tmf = null;
-    sslOptions = null;
+    JdkSSLOptions sslOptions = null;
     // Synchronized so that we only have a single
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
@@ -161,7 +161,7 @@ public class CassandraCQLClient extends DB {
           tmf.init(keyStore);
           sslContext = SSLContext.getInstance("TLSv1.2");
           sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-          JdkSSLOptions sslOptions = RemoteEndpointAwareJdkSSLOptions.builder()
+          sslOptions = RemoteEndpointAwareJdkSSLOptions.builder()
                    .withSSLContext(sslContext)
                    .build();
           // end SSL integration
