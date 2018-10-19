@@ -24,6 +24,7 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.HostDistance;
 import com.datastax.driver.core.JdkSSLOptions;
 import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.RemoteEndpointAwareJdkSSLOptions
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
