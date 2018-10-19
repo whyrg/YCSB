@@ -22,6 +22,7 @@ import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.JdkSSLOptions;
 import com.datastax.driver.core.Metadata;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -45,6 +46,9 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.*;
 import java.security.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 /**
  * Cassandra 2.x CQL client.
@@ -62,6 +66,7 @@ public class CassandraCQLClient extends DB {
   private static TrustManagerFactory tmf = null;
   private static JdkSSLOptions sslOptions = null;
   private static String sslKeyStorePassword = null;
+  private static File sslKeyStoreFile = null;
 
   private static ConsistencyLevel readConsistencyLevel = ConsistencyLevel.ONE;
   private static ConsistencyLevel writeConsistencyLevel = ConsistencyLevel.ONE;
@@ -145,8 +150,8 @@ public class CassandraCQLClient extends DB {
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
 
-        String sslKeystoreFilePath = config.getProperty(SSL_KEYSTORE_PROPERTY);
-        String sslKeystorePassword = config.getProperty(SSL_PASSWORD_PROPERTY);
+        String sslKeystoreFilePath = getProperties().getProperty(SSL_KEYSTORE_PROPERTY);
+        String sslPassword = getProperties().getProperty(SSL_PASSWORD_PROPERTY);
 
         String keyspace = getProperties().getProperty(KEYSPACE_PROPERTY,
             KEYSPACE_PROPERTY_DEFAULT);
@@ -169,8 +174,8 @@ public class CassandraCQLClient extends DB {
                   .toString();
           }
 
-          sslKeyStorePassword = (sslKeystorePassword != null && !sslKeystorePassword.isEmpty()) ?
-                  ssl_keystore_password : sslKeyStorePassword;
+          sslKeyStorePassword = (sslPassword != null && !sslPassword.isEmpty()) ?
+                  sslPassword : sslKeyStorePassword;
 
           sslKeyStoreFile = new File(sslKeystoreFilePath);
 
