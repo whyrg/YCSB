@@ -43,6 +43,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.net.ssl.SSLContext;
+import java.security.*;
 
 /**
  * Cassandra 2.x CQL client.
@@ -55,6 +57,7 @@ public class CassandraCQLClient extends DB {
 
   private static Cluster cluster = null;
   private static Session session = null;
+  private static SSLContext sslContext = null;
 
   private static ConsistencyLevel readConsistencyLevel = ConsistencyLevel.ONE;
   private static ConsistencyLevel writeConsistencyLevel = ConsistencyLevel.ONE;
@@ -64,10 +67,12 @@ public class CassandraCQLClient extends DB {
   public static final String KEYSPACE_PROPERTY_DEFAULT = "ycsb";
   public static final String USERNAME_PROPERTY = "cassandra.username";
   public static final String PASSWORD_PROPERTY = "cassandra.password";
+  public static final String SSL_PROPERTY = "cassandra.ssl";
 
   public static final String HOSTS_PROPERTY = "hosts";
   public static final String PORT_PROPERTY = "port";
   public static final String PORT_PROPERTY_DEFAULT = "9042";
+  public static final String SSL_PROPERTY_DEFAULT = "false";
 
   public static final String READ_CONSISTENCY_LEVEL_PROPERTY =
       "cassandra.readconsistencylevel";
@@ -107,18 +112,17 @@ public class CassandraCQLClient extends DB {
 
     // Keep track of number of calls to init (for later cleanup)
     INIT_COUNT.incrementAndGet();
-
+    KeyManagerFactory kmf = null;
+    TrustManagerFactory tmf = null;
     // Synchronized so that we only have a single
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
-
       // Check if the cluster has already been initialized
       if (cluster != null) {
         return;
       }
 
       try {
-
         debug =
             Boolean.parseBoolean(getProperties().getProperty("debug", "false"));
         trace = Boolean.valueOf(getProperties().getProperty(TRACING_PROPERTY, TRACING_PROPERTY_DEFAULT));
@@ -131,6 +135,7 @@ public class CassandraCQLClient extends DB {
         }
         String[] hosts = host.split(",");
         String port = getProperties().getProperty(PORT_PROPERTY, PORT_PROPERTY_DEFAULT);
+        String ssl = getProperties().getProperty(SSL_PROPERTY,SSL_PROPERT_DEFAULT);
 
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
@@ -144,7 +149,31 @@ public class CassandraCQLClient extends DB {
         writeConsistencyLevel = ConsistencyLevel.valueOf(
             getProperties().getProperty(WRITE_CONSISTENCY_LEVEL_PROPERTY,
                 WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
-
+        if (ssl.toLowerCase().equals("true")){
+          // begin SSL integration
+          kmf = KeyManagerFactory.getInstance(KeyManagerFactory
+                              .getDefaultAlgorithm());
+          kmf.init(keyStore, sslKeyStorePassword.toCharArray());
+          tmf = TrustManagerFactory.getInstance(TrustManagerFactory
+                              .getDefaultAlgorithm());
+          tmf.init(keyStore);
+          sslContext = SSLContext.getInstance("TLSv1.2");
+          sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+          JdkSSLOptions sslOptions = RemoteEndpointAwareJdkSSLOptions.builder()
+                   .withSSLContext(sc)
+                   .build();
+          // end SSL integration
+        }
+        
+        Cluster.Builder clusterBuilder = Cluster.builder().withPort(Integer.valueOf(port)).addContactPoints(hosts);
+        if ((username != null) && !username.isEmpty()) {
+          clusterBuilder = clusterBuilder.withCredentials(username,password);
+        }
+        if (ssl.toLowerCase().equals("true")) {
+          clusterBuilder = clusterBuilder.withSSL(sslOptions);
+        }
+        cluster = clusterBuilder.build();
+/*
         if ((username != null) && !username.isEmpty()) {
           cluster = Cluster.builder().withCredentials(username, password)
               .withPort(Integer.valueOf(port)).addContactPoints(hosts).build();
@@ -152,7 +181,7 @@ public class CassandraCQLClient extends DB {
           cluster = Cluster.builder().withPort(Integer.valueOf(port))
               .addContactPoints(hosts).build();
         }
-
+*/
         String maxConnections = getProperties().getProperty(
             MAX_CONNECTIONS_PROPERTY);
         if (maxConnections != null) {
