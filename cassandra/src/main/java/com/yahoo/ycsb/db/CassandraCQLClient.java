@@ -58,6 +58,10 @@ public class CassandraCQLClient extends DB {
   private static Cluster cluster = null;
   private static Session session = null;
   private static SSLContext sslContext = null;
+  private static KeyManagerFactory kmf = null;
+  private static TrustManagerFactory tmf = null;
+  private static JdkSSLOptions sslOptions = null;
+  private static String sslKeyStorePassword = null;
 
   private static ConsistencyLevel readConsistencyLevel = ConsistencyLevel.ONE;
   private static ConsistencyLevel writeConsistencyLevel = ConsistencyLevel.ONE;
@@ -115,10 +119,6 @@ public class CassandraCQLClient extends DB {
 
     // Keep track of number of calls to init (for later cleanup)
     INIT_COUNT.incrementAndGet();
-    KeyManagerFactory kmf = null;
-    TrustManagerFactory tmf = null;
-    JdkSSLOptions sslOptions = null;
-    String sslKeyStorePassword = null;
     // Synchronized so that we only have a single
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
@@ -178,7 +178,6 @@ public class CassandraCQLClient extends DB {
               throw new Exception(String.format("Unable to access the SSL Key Store file from %s",
                  sslKeystoreFilePath));
           }
-
 
           final KeyStore keyStore = KeyStore.getInstance("JKS");
           try (final InputStream is = new FileInputStream(sslKeyStoreFile)) {
