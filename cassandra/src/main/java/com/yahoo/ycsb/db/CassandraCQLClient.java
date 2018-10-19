@@ -66,7 +66,8 @@ public class CassandraCQLClient extends DB {
   private static KeyManagerFactory kmf = null;
   private static TrustManagerFactory tmf = null;
   private static JdkSSLOptions sslOptions = null;
-  private static String sslKeyStorePassword = null;
+  private static String sslKeyStorePassword = "changeit";
+
   private static File sslKeyStoreFile = null;
 
   private static ConsistencyLevel readConsistencyLevel = ConsistencyLevel.ONE;
