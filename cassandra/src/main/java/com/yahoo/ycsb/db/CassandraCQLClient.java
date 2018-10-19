@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.net.ssl.SSLContext;
+import javax.net.ssl.SSLContext;
 import java.security.*;
 
 /**
@@ -114,6 +114,7 @@ public class CassandraCQLClient extends DB {
     INIT_COUNT.incrementAndGet();
     KeyManagerFactory kmf = null;
     TrustManagerFactory tmf = null;
+    sslOptions = null;
     // Synchronized so that we only have a single
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
@@ -135,7 +136,7 @@ public class CassandraCQLClient extends DB {
         }
         String[] hosts = host.split(",");
         String port = getProperties().getProperty(PORT_PROPERTY, PORT_PROPERTY_DEFAULT);
-        String ssl = getProperties().getProperty(SSL_PROPERTY, SSL_PROPERT_DEFAULT);
+        String ssl = getProperties().getProperty(SSL_PROPERTY, SSL_PROPERTY_DEFAULT);
 
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
@@ -151,6 +152,7 @@ public class CassandraCQLClient extends DB {
                 WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
         if (ssl.toLowerCase().equals("true")){
           // begin SSL integration
+          final KeyStore keyStore = KeyStore.getInstance("JKS");
           kmf = KeyManagerFactory.getInstance(KeyManagerFactory
                               .getDefaultAlgorithm());
           kmf.init(keyStore, sslKeyStorePassword.toCharArray());
@@ -160,7 +162,7 @@ public class CassandraCQLClient extends DB {
           sslContext = SSLContext.getInstance("TLSv1.2");
           sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
           JdkSSLOptions sslOptions = RemoteEndpointAwareJdkSSLOptions.builder()
-                   .withSSLContext(sc)
+                   .withSSLContext(sslContext)
                    .build();
           // end SSL integration
         }
