@@ -135,7 +135,7 @@ public class CassandraCQLClient extends DB {
         }
         String[] hosts = host.split(",");
         String port = getProperties().getProperty(PORT_PROPERTY, PORT_PROPERTY_DEFAULT);
-        String ssl = getProperties().getProperty(SSL_PROPERTY,SSL_PROPERT_DEFAULT);
+        String ssl = getProperties().getProperty(SSL_PROPERTY, SSL_PROPERT_DEFAULT);
 
         String username = getProperties().getProperty(USERNAME_PROPERTY);
         String password = getProperties().getProperty(PASSWORD_PROPERTY);
@@ -167,7 +167,7 @@ public class CassandraCQLClient extends DB {
         
         Cluster.Builder clusterBuilder = Cluster.builder().withPort(Integer.valueOf(port)).addContactPoints(hosts);
         if ((username != null) && !username.isEmpty()) {
-          clusterBuilder = clusterBuilder.withCredentials(username,password);
+          clusterBuilder = clusterBuilder.withCredentials(username, password);
         }
         if (ssl.toLowerCase().equals("true")) {
           clusterBuilder = clusterBuilder.withSSL(sslOptions);
